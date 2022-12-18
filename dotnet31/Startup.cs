@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Trace;
 using Serilog;
 
 namespace dotnet31
@@ -29,9 +31,17 @@ namespace dotnet31
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
+                .Enrich.WithProperty("appName", "dotnet3")
                 .WriteTo.Seq("http://localhost:5341")
                 .CreateLogger();
             services.AddControllers();
+            
+            services.AddOpenTelemetry()
+                .WithTracing(builder => builder
+                        .AddAspNetCoreInstrumentation()
+                    // .AddJaegerExporter()
+                )
+                .StartWithHost();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,7 +53,16 @@ namespace dotnet31
             }
 
             app.UseHttpsRedirection();
-            app.UseSerilogRequestLogging();
+            app.UseSerilogRequestLogging(opts
+                => opts.EnrichDiagnosticContext = (diagnosticsContext, httpContext)=>{
+                    diagnosticsContext.Set("bob","lol");
+                    var request = httpContext.Request;
+                    diagnosticsContext.Set("headers",request.Headers);
+                    // foreach (var keyValuePair in request.Headers)
+                    // {
+                    //     diagnosticsContext.Set(keyValuePair.Key,keyValuePair.Value);
+                    // }
+                });
 
             app.UseRouting();
 
