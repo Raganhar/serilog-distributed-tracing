@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -42,6 +45,11 @@ namespace dotnet31
                     // .AddJaegerExporter()
                 )
                 .StartWithHost();
+            
+            var handlerType = typeof(HttpClient).Assembly.GetType("System.Net.Http.DiagnosticsHandler");
+            var listenerField = handlerType.GetField("s_diagnosticListener", BindingFlags.NonPublic | BindingFlags.Static);
+            var listener = listenerField.GetValue(null) as DiagnosticListener;
+            listener.Subscribe(new NullObserver(), name => false);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,16 +61,7 @@ namespace dotnet31
             }
 
             app.UseHttpsRedirection();
-            app.UseSerilogRequestLogging(opts
-                => opts.EnrichDiagnosticContext = (diagnosticsContext, httpContext)=>{
-                    diagnosticsContext.Set("bob","lol");
-                    var request = httpContext.Request;
-                    diagnosticsContext.Set("headers",request.Headers);
-                    // foreach (var keyValuePair in request.Headers)
-                    // {
-                    //     diagnosticsContext.Set(keyValuePair.Key,keyValuePair.Value);
-                    // }
-                });
+            app.UseSerilogRequestLogging();
 
             app.UseRouting();
 

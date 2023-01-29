@@ -1,6 +1,9 @@
+using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using Amazon;
 using Amazon.S3;
+using DockerWebAPI;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -25,6 +28,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var handlerType = typeof(HttpClient).Assembly.GetType("System.Net.Http.DiagnosticsHandler");
+var listenerField = handlerType.GetField("s_diagnosticListener", BindingFlags.NonPublic | BindingFlags.Static);
+var listener = listenerField.GetValue(null) as DiagnosticListener;
+listener.Subscribe(new NullObserver(), name => false);
+
 // builder.Services.AddHealthChecks();
 builder.Services.AddOpenTelemetry()
     .WithTracing(builder => builder
