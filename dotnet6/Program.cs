@@ -23,25 +23,10 @@ builder.Host.UseSerilog();
 
 builder.Logging.AddSerilog(Log.Logger);
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoProffTelemetry();
-//
-// var handlerType = typeof(HttpClient).Assembly.GetType("System.Net.Http.DiagnosticsHandler");
-// var listenerField = handlerType.GetField("s_diagnosticListener", BindingFlags.NonPublic | BindingFlags.Static);
-// var listener = listenerField.GetValue(null) as DiagnosticListener;
-// listener.Subscribe(new NullObserver(), name => false);
-
-// // builder.Services.AddHealthChecks();
-// builder.Services.AddOpenTelemetry()
-//     .WithTracing(builder => builder
-//             .AddAspNetCoreInstrumentation()
-//         // .AddJaegerExporter()
-//     )
-//     .StartWithHost();
-// // builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
