@@ -3,24 +3,22 @@ using System.Net;
 using System.Reflection;
 using Amazon;
 using Amazon.S3;
+using ap.telemetry;
 using DockerWebAPI;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using HealthChecks.Aws.S3;
-using OpenTelemetry;
-using OpenTelemetry.Trace;
+using DockerWebAPI.Controllers;
+using Flurl.Http;
 using Serilog;
-using Serilog.Core.Enrichers;
 using Serilog.Enrichers.Span;
 
 var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .Enrich.WithSpan()
+    .AddAutoProffTelemetryToSerilog()
     .Enrich.WithProperty("appName", "dotnet6")
     .WriteTo.Seq("http://localhost:5341")
     .CreateLogger();
+
 builder.Host.UseSerilog();
 
 builder.Logging.AddSerilog(Log.Logger);
@@ -29,19 +27,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var handlerType = typeof(HttpClient).Assembly.GetType("System.Net.Http.DiagnosticsHandler");
-var listenerField = handlerType.GetField("s_diagnosticListener", BindingFlags.NonPublic | BindingFlags.Static);
-var listener = listenerField.GetValue(null) as DiagnosticListener;
-listener.Subscribe(new NullObserver(), name => false);
+builder.Services.AddAutoProffTelemetry();
+//
+// var handlerType = typeof(HttpClient).Assembly.GetType("System.Net.Http.DiagnosticsHandler");
+// var listenerField = handlerType.GetField("s_diagnosticListener", BindingFlags.NonPublic | BindingFlags.Static);
+// var listener = listenerField.GetValue(null) as DiagnosticListener;
+// listener.Subscribe(new NullObserver(), name => false);
 
-// builder.Services.AddHealthChecks();
-builder.Services.AddOpenTelemetry()
-    .WithTracing(builder => builder
-            .AddAspNetCoreInstrumentation()
-        // .AddJaegerExporter()
-    )
-    .StartWithHost();
-// builder.Services.AddHttpContextAccessor();
+// // builder.Services.AddHealthChecks();
+// builder.Services.AddOpenTelemetry()
+//     .WithTracing(builder => builder
+//             .AddAspNetCoreInstrumentation()
+//         // .AddJaegerExporter()
+//     )
+//     .StartWithHost();
+// // builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

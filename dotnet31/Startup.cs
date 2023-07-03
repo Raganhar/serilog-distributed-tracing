@@ -13,8 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry;
-using OpenTelemetry.Trace;
+// using OpenTelemetry;
+// using OpenTelemetry.Trace;
 using Serilog;
 
 namespace dotnet31
@@ -39,12 +39,12 @@ namespace dotnet31
                 .CreateLogger();
             services.AddControllers();
             
-            services.AddOpenTelemetry()
-                .WithTracing(builder => builder
-                        .AddAspNetCoreInstrumentation()
-                    // .AddJaegerExporter()
-                )
-                .StartWithHost();
+            // services.AddOpenTelemetry()
+            //     .WithTracing(builder => builder
+            //             .AddAspNetCoreInstrumentation()
+            //         // .AddJaegerExporter()
+            //     )
+            //     .StartWithHost();
             
             var handlerType = typeof(HttpClient).Assembly.GetType("System.Net.Http.DiagnosticsHandler");
             var listenerField = handlerType.GetField("s_diagnosticListener", BindingFlags.NonPublic | BindingFlags.Static);
